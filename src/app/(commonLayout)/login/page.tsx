@@ -4,11 +4,12 @@ import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
-
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { loginAction } from "../../../../actions/auth";
 
 
 const loginSchema = z.object({
@@ -17,6 +18,8 @@ const loginSchema = z.object({
 });
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const form = useForm({
     defaultValues: {
       email: "",
@@ -24,15 +27,16 @@ export default function LoginPage() {
     },
     onSubmit: async ({ value }) => {
       const toastId = toast.loading("Logging in...");
-      try {
-        console.log("Submitting:", value);
-        
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        toast.success("Logged in successfully!", { id: toastId });
-        
-      } catch (err: unknown) {
-        toast.error((err as { message?: string }).message || "Login failed", { id: toastId });
+      const result = await loginAction(value);
+      
+      if (result.error) {
+        toast.error(result.error, { id: toastId });
+        return;
       }
+
+      toast.success("Logged in successfully!", { id: toastId });
+      router.refresh(); 
+      router.push("/");
     },
   });
 

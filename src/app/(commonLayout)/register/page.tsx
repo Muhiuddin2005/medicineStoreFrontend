@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { registerAction } from "../../../../actions/auth";
 
 
 const registerSchema = z.object({
@@ -30,15 +31,16 @@ export default function RegisterPage() {
     },
     onSubmit: async ({ value }) => {
       const toastId = toast.loading("Creating account...");
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        
-        console.log("Registration Data:", value);
-        toast.success("Account created successfully!", { id: toastId });
-        router.push("/login");
-      } catch (err: unknown) {
-        toast.error((err as { message?: string }).message || "Registration failed", { id: toastId });
+      const result = await registerAction(value);
+      
+      if (result.error) {
+        toast.error(result.error, { id: toastId });
+        return;
       }
+
+      toast.success("Account created successfully!", { id: toastId });
+      router.refresh();
+      router.push("/");
     },
   });
 
