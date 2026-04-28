@@ -2,8 +2,8 @@ import Image from "next/image";
 import { Pill } from "lucide-react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Medicine } from "@/types";
+import { AddToCartButton } from "./AddToCartButton";
 
 export function MedicineCard({ medicine }: { medicine: Medicine }) {
   return (
@@ -38,7 +38,7 @@ export function MedicineCard({ medicine }: { medicine: Medicine }) {
 
       <CardFooter className="p-4 pt-0 flex items-center justify-between mt-auto">
         <span className="text-lg font-bold text-primary">৳{medicine.price}</span>
-        <Button size="sm">Add to Cart</Button>
+        <AddToCartButton medicine={medicine} />
       </CardFooter>
     </Card>
   );

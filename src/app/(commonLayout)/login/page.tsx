@@ -14,7 +14,7 @@ import { loginAction } from "../../../../actions/auth";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Minimum length is 8"),
+  password: z.string().min(6, "Minimum length is 6"),
 });
 
 export default function LoginPage() {

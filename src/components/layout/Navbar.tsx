@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, LogOut, Menu, Pill } from "lucide-react";
+import { ShoppingCart, Menu, Pill } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { useCart } from "@/providers/CartProvider";
+import { Badge } from "@/components/ui/badge";
 
 export function Navbar() {
-  const user = null; 
+  const { totalItems } = useCart();
+  const user = null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -20,12 +23,24 @@ export function Navbar() {
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">Home</Link>
-          <Link href="/shop" className="text-sm font-medium hover:text-primary transition-colors">Shop</Link>
+          <Link href="/" className="text-sm font-medium hover:text-primary">Home</Link>
+          <Link href="/shop" className="text-sm font-medium hover:text-primary">Shop</Link>
         </nav>
 
-        {/* Desktop Auth / Cart (Mocked) */}
+        {/* Desktop Auth / Cart */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Cart Icon with Badge */}
+          <Link href="/cart" className="relative mr-2">
+            <Button variant="ghost" size="icon">
+              <ShoppingCart className="h-5 w-5" />
+            </Button>
+            {totalItems > 0 && (
+              <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px]">
+                {totalItems}
+              </Badge>
+            )}
+          </Link>
+
           {user ? (
             <Button variant="outline" size="sm">Dashboard</Button>
           ) : (
@@ -36,25 +51,21 @@ export function Navbar() {
           )}
         </div>
 
-        {/* Mobile Nav (Sheet) */}
+        {/* Mobile Nav */}
         <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
+          {/* ... Sheet Trigger ... */}
           <SheetContent side="right">
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+            <SheetTitle className="sr-only">Menu</SheetTitle>
             <nav className="flex flex-col gap-4 mt-8">
+              <Link href="/cart" className="flex items-center justify-between">
+                <span className="text-lg font-medium">Cart</span>
+                {totalItems > 0 && <Badge>{totalItems}</Badge>}
+              </Link>
               <Link href="/" className="text-lg font-medium">Home</Link>
               <Link href="/shop" className="text-lg font-medium">Shop</Link>
-              <Link href="/login" className="text-lg font-medium">Login</Link>
-              <Link href="/register" className="text-lg font-medium">Register</Link>
             </nav>
           </SheetContent>
         </Sheet>
-
       </div>
     </header>
   );
