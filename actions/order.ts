@@ -38,3 +38,88 @@ export async function createOrderAction(payload: {
     return { error: "Connection to server failed." };
   }
 }
+
+
+
+export async function getMyOrdersAction() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+
+    if (!token) {
+      return { error: "Unauthorized", data: [] };
+    }
+
+    const res = await fetch(`${API_URL}/api/orders`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token,
+      },
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      return { error: data.message || "Failed to fetch orders", data: [] };
+    }
+
+    return { success: true, data: data.data };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return { error: "Connection to server failed.", data: [] };
+  }
+}
+
+export async function getSellerOrdersAction() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+
+    if (!token) return { error: "Unauthorized", data: [] };
+
+    const res = await fetch(`${API_URL}/api/seller/orders`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token
+      },
+      cache: "no-store",
+    });
+
+    const data = await res.json();
+    if (!data.success) return { error: data.message || "Failed to fetch orders", data: [] };
+
+    return { success: true, data: data.data };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return { error: "Connection to server failed.", data: [] };
+  }
+}
+
+export async function updateOrderStatusAction(orderId: number, status: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("token")?.value;
+
+    if (!token) return { error: "Unauthorized" };
+
+    const res = await fetch(`${API_URL}/api/seller/orders/${orderId}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: token
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    const data = await res.json();
+    if (!data.success) return { error: data.message || "Failed to update status" };
+
+    return { success: true };
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (error) {
+    return { error: "Connection to server failed." };
+  }
+}

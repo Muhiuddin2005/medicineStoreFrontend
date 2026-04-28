@@ -41,6 +41,10 @@ export function Navbar() {
             )}
           </Link>
 
+            <Link href="/dashboard">
+            <Button variant="outline" size="sm">Dashboard</Button>
+          </Link>
+
           {user ? (
             <Button variant="outline" size="sm">Dashboard</Button>
           ) : (
