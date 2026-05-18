@@ -1,4 +1,20 @@
+export const ROLES = {
+  CUSTOMER: "CUSTOMER",
+  SELLER: "SELLER",
+  ADMIN: "ADMIN",
+} as const;
 
+export type Role = (typeof ROLES)[keyof typeof ROLES];
+
+export const ORDER_STATUSES = {
+  PLACED: "PLACED",
+  PROCESSING: "PROCESSING",
+  SHIPPED: "SHIPPED",
+  DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
+} as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
 
 export interface Category {
   id: number;

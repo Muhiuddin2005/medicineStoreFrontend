@@ -9,6 +9,7 @@ interface CartContextType {
   addToCart: (medicine: Medicine) => void;
   removeFromCart: (id: number) => void;
   updateQuantity: (id: number, delta: number) => void;
+  setQuantity: (id: number, qty: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -31,7 +32,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("medistore-cart", JSON.stringify(cart));
   }, [cart]);
@@ -39,6 +39,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addToCart = (medicine: Medicine) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.medicine.id === medicine.id);
+      const currentQuantity = existing ? existing.quantity : 0;
+      if (currentQuantity + 1 > medicine.stock) {
+        toast.error(`Only ${medicine.stock} units available in stock.`);
+        return prev;
+      }
+
       if (existing) {
         toast.info(`Increased quantity for ${medicine.name}`);
         return prev.map((item) =>
@@ -47,6 +53,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : item
         );
       }
+      
       toast.success(`${medicine.name} added to cart`);
       return [...prev, { medicine, quantity: 1 }];
     });
@@ -61,8 +68,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setCart((prev) =>
       prev.map((item) => {
         if (item.medicine.id === id) {
-          const newQty = Math.max(1, item.quantity + delta);
-          return { ...item, quantity: newQty };
+          const newQty = item.quantity + delta;
+          if (newQty > item.medicine.stock) {
+            toast.error(`Only ${item.medicine.stock} units available in stock.`);
+            return item;
+          }
+          return { ...item, quantity: Math.max(1, newQty) };
+        }
+        return item;
+      })
+    );
+  };
+
+  const setQuantity = (id: number, quantity: number) => {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.medicine.id === id) {
+          if (quantity > item.medicine.stock) {
+            toast.error(`Only ${item.medicine.stock} units available in stock.`);
+            return { ...item, quantity: item.medicine.stock };
+          }
+          return { ...item, quantity: Math.max(1, quantity) };
         }
         return item;
       })
@@ -78,7 +104,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalPrice = cart.reduce((sum, item) => sum + item.medicine.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, clearCart, totalItems, totalPrice }}>
+    <CartContext.Provider value={{ cart, addToCart, removeFromCart, updateQuantity, setQuantity, clearCart, totalItems, totalPrice }}>
       {children}
     </CartContext.Provider>
   );
