@@ -4,13 +4,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { OrderStatusSelect } from "@/components/modules/dashboard/OrderStatusSelect";
 import { Package } from "lucide-react";
 import { getSellerOrdersAction } from "../../../../../actions/order";
+import { type OrderStatus } from "@/types";
 
 type Order = {
   id: number;
   createdAt: string;
   shippingAddress: string;
   totalPrice: number;
-  status: string;
+  status: OrderStatus;
 };
 
 export default async function SellerOrdersPage() {
@@ -53,11 +54,13 @@ export default async function SellerOrdersPage() {
                   {orders.map((order: Order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">#{order.id}</TableCell>
-                      <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : "N/A"}
+                      </TableCell>
                       <TableCell className="max-w-50 truncate" title={order.shippingAddress}>
                         {order.shippingAddress}
                       </TableCell>
-                      <TableCell className="font-bold">৳{order.totalPrice}</TableCell>
+                      <TableCell className="font-bold">৳{Number(order.totalPrice || 0).toFixed(2)}</TableCell>
                       <TableCell>
                         <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
                       </TableCell>
