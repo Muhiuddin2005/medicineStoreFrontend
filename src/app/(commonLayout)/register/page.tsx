@@ -4,30 +4,35 @@ import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { User, Store } from "lucide-react";
+import { motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { registerAction } from "../../../../actions/auth";
+import { ROLES } from "@/types";
 
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  role: z.enum(["CUSTOMER", "SELLER"]),
+  role: z.enum([ROLES.CUSTOMER, ROLES.SELLER]),
 });
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSellerRegistration = searchParams.get("role")?.toLowerCase() === "seller";
   const form = useForm({
     defaultValues: {
       name: "",
       email: "",
       password: "",
-      role: "CUSTOMER" as "CUSTOMER" | "SELLER",
+      role: isSellerRegistration ? ROLES.SELLER : ROLES.CUSTOMER,
     },
     onSubmit: async ({ value }) => {
       const toastId = toast.loading("Creating account...");
@@ -50,7 +55,9 @@ export default function RegisterPage() {
         <Card>
           <CardHeader className="text-center">
             <CardTitle>Create Account</CardTitle>
-            <CardDescription>Join MediStore as a Customer or Seller</CardDescription>
+            <CardDescription>
+              {isSellerRegistration ? "Create your seller account to start listing medicines." : "Join MediStore as a Customer or Seller"}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form
@@ -63,7 +70,6 @@ export default function RegisterPage() {
             >
               <FieldGroup>
                 
-                {/* Name Field */}
                 <form.Field
                   name="name"
                   validators={{
@@ -97,7 +103,6 @@ export default function RegisterPage() {
                   }}
                 </form.Field>
 
-                {/* Email Field */}
                 <form.Field
                   name="email"
                   validators={{
@@ -132,7 +137,6 @@ export default function RegisterPage() {
                   }}
                 </form.Field>
 
-                {/* Password Field */}
                 <form.Field
                   name="password"
                   validators={{
@@ -167,7 +171,6 @@ export default function RegisterPage() {
                   }}
                 </form.Field>
 
-                {/* Role Selection Dropdown */}
                 <form.Field
                   name="role"
                   validators={{
@@ -181,23 +184,52 @@ export default function RegisterPage() {
                     const isInvalid = field.state.meta.isTouched && field.state.meta.errors.length > 0;
                     return (
                       <Field data-invalid={isInvalid}>
-                        <FieldLabel htmlFor={field.name}>Account Type</FieldLabel>
-                        <select
-                          id={field.name}
-                          name={field.name}
-                          value={field.state.value}
-                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                            field.handleChange(e.target.value as "CUSTOMER" | "SELLER")
-                          }
-                          className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          <option value="CUSTOMER" className="text-foreground bg-background">
-                            Customer
-                          </option>
-                          <option value="SELLER" className="text-foreground bg-background">
-                            Seller
-                          </option>
-                        </select>
+                        <FieldLabel>Account Type</FieldLabel>
+                        
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                          <div
+                            onClick={() => !isSellerRegistration && field.handleChange(ROLES.CUSTOMER)}
+                            className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 transition-colors duration-300 ${
+                              field.state.value === ROLES.CUSTOMER
+                                ? "border-transparent bg-primary/5 text-primary"
+                                : "border-border/60 bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-muted/50"
+                            } ${isSellerRegistration ? "opacity-50 cursor-not-allowed" : "active:scale-[0.98]"}`}
+                          >
+                            <User className="mb-2 h-7 w-7" />
+                            <span className="text-sm font-bold tracking-wide">Customer</span>
+                            
+                            {field.state.value === ROLES.CUSTOMER && (
+                              <motion.div 
+                                layoutId="activeRoleIndicator" 
+                                className="absolute inset-0 rounded-xl border-2 border-primary shadow-[0_0_15px_rgba(37,99,235,0.15)]" 
+                                initial={false} 
+                                transition={{ type: "spring", stiffness: 400, damping: 25 }} 
+                              />
+                            )}
+                          </div>
+
+                          <div
+                            onClick={() => !isSellerRegistration && field.handleChange(ROLES.SELLER)}
+                            className={`relative flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 p-4 transition-colors duration-300 ${
+                              field.state.value === ROLES.SELLER
+                                ? "border-transparent bg-primary/5 text-primary"
+                                : "border-border/60 bg-transparent text-muted-foreground hover:border-primary/30 hover:bg-muted/50"
+                            } ${isSellerRegistration ? "cursor-not-allowed" : "active:scale-[0.98]"}`}
+                          >
+                            <Store className="mb-2 h-7 w-7" />
+                            <span className="text-sm font-bold tracking-wide">Seller</span>
+                            
+                            {field.state.value === ROLES.SELLER && (
+                              <motion.div 
+                                layoutId="activeRoleIndicator" 
+                                className="absolute inset-0 rounded-xl border-2 border-primary shadow-[0_0_15px_rgba(37,99,235,0.15)]" 
+                                initial={false} 
+                                transition={{ type: "spring", stiffness: 400, damping: 25 }} 
+                              />
+                            )}
+                          </div>
+                        </div>
+
                         {isInvalid && (
                           <FieldError
                             errors={field.state.meta.errors.map((err) => ({

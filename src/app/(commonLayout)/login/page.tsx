@@ -4,7 +4,8 @@ import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,15 @@ const loginSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/";
+  const reason = searchParams.get("reason");
+
+  useEffect(() => {
+    if (reason === "confirm-order") {
+      toast.info("Log in to confirm your order.");
+    }
+  }, [reason]);
 
   const form = useForm({
     defaultValues: {
@@ -36,7 +46,7 @@ export default function LoginPage() {
 
       toast.success("Logged in successfully!", { id: toastId });
       router.refresh(); 
-      router.push("/");
+      router.push(redirectTo);
     },
   });
 
