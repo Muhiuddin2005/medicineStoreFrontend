@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "@tanstack/react-form";
 import { useCart } from "@/providers/CartProvider";
 import { toast } from "sonner";
@@ -61,14 +62,31 @@ export default function CheckoutPage() {
       const result = await createOrderAction(orderPayload);
 
       if (result.error) {
+        const errorLower = result.error.toLowerCase();
+        if (errorLower.includes("unauthorized") || errorLower.includes("logged in")) {
+          sessionStorage.setItem("pending_shipping_address", value.shippingAddress);
+          
+          toast.error("Log in to confirm your order.", { id: toastId });
+          router.push("/login?redirect=/checkout&reason=confirm-order");
+          return;
+        }
         toast.error(result.error, { id: toastId });
       } else {
+        sessionStorage.removeItem("pending_shipping_address");
         toast.success("Order placed successfully!", { id: toastId });
         clearCart();
         router.push("/");
       }
     },
   });
+
+  useEffect(() => {
+    const savedAddress = sessionStorage.getItem("pending_shipping_address");
+    if (savedAddress) {
+      form.setFieldValue("shippingAddress", savedAddress);
+      sessionStorage.removeItem("pending_shipping_address");
+    }
+  }, [form]);
 
   if (cart.length === 0) {
     return (
@@ -84,7 +102,6 @@ export default function CheckoutPage() {
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-        {/* Left: Address Form */}
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -144,7 +161,6 @@ export default function CheckoutPage() {
           </Card>
         </div>
 
-        {/* Right: Order Review */}
         <Card className="h-fit">
           <CardHeader>
             <CardTitle>Order Summary</CardTitle>

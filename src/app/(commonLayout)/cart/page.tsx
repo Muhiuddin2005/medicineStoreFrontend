@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
+  const { cart, removeFromCart, updateQuantity, setQuantity, totalPrice, totalItems } = useCart();
 
   if (cart.length === 0) {
     return (
@@ -31,36 +31,49 @@ export default function CartPage() {
       <h1 className="text-3xl font-bold mb-8">Shopping Cart ({totalItems} items)</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Cart Items List */}
         <div className="lg:col-span-2 space-y-4">
           {cart.map((item) => (
-            <Card key={item.medicine.id} className="overflow-hidden">
+            <Card key={item.medicine.id} className="overflow-hidden hover:shadow-md transition-shadow">
               <CardContent className="p-4 flex items-center gap-4">
-                <div className="h-20 w-20 bg-muted rounded-lg flex items-center justify-center shrink-0">
-                  <Pill className="h-8 w-8 text-muted-foreground/40" />
-                </div>
-                
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg">{item.medicine.name}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-1">{item.medicine.category.name}</p>
-                  <p className="font-bold text-primary mt-1">৳{item.medicine.price}</p>
-                </div>
+                <Link href={`/shop/${item.medicine.id}`} className="flex items-center gap-4 flex-1 min-w-0 group">
+                  <div className="h-20 w-20 bg-muted rounded-lg flex items-center justify-center shrink-0 group-hover:bg-muted/80 transition-colors">
+                    <Pill className="h-8 w-8 text-muted-foreground/40 group-hover:scale-110 transition-transform" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-lg group-hover:text-primary transition-colors truncate">{item.medicine.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-1">{item.medicine.category.name}</p>
+                    <p className="font-bold text-primary mt-1">৳{item.medicine.price}</p>
+                  </div>
+                </Link>
 
                 <div className="flex items-center gap-2">
-                  <div className="flex items-center border rounded-md">
+                  <div className="flex items-center border rounded-md bg-background">
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8" 
+                      className="h-8 w-8 rounded-r-none border-r shrink-0" 
                       onClick={() => updateQuantity(item.medicine.id, -1)}
                     >
                       <Minus className="h-3 w-3" />
                     </Button>
-                    <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                    <input 
+                      type="number"
+                      value={item.quantity}
+                      min={1}
+                      max={item.medicine.stock}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val)) {
+                          setQuantity(item.medicine.id, val);
+                        }
+                      }}
+                      className="w-12 text-center text-sm font-medium bg-transparent border-0 focus:ring-0 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="h-8 w-8" 
+                      className="h-8 w-8 rounded-l-none border-l shrink-0" 
                       onClick={() => updateQuantity(item.medicine.id, 1)}
                     >
                       <Plus className="h-3 w-3" />
@@ -80,7 +93,6 @@ export default function CartPage() {
           ))}
         </div>
 
-        {/* Summary Sidebar */}
         <div className="lg:col-span-1">
           <Card className="sticky top-24">
             <CardContent className="p-6 space-y-4">
@@ -117,7 +129,6 @@ export default function CartPage() {
   );
 }
 
-// Internal icon for the placeholder
 function Pill(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
