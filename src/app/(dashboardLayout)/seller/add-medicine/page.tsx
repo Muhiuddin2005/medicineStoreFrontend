@@ -4,12 +4,17 @@ import { useForm } from "@tanstack/react-form";
 import * as z from "zod";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createMedicineAction } from "../../../../../actions/medicine";
+import { getCategoriesAction } from "../../../../../actions/category";
+import { Category } from "@/types";
+import imageCompression from "browser-image-compression";
 
 const medicineSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -18,34 +23,82 @@ const medicineSchema = z.object({
   stock: z.number().min(1, "Stock must be at least 1"),
   manufacturer: z.string().min(2, "Manufacturer is required"),
   categoryId: z.number().min(1, "Please select a category"),
+  image: z.custom<File | null>((val) => val instanceof File, { message: "Product image is required" }),
 });
+
+const getErrorMessage = (err: unknown): string => {
+  if (typeof err === "string") return err;
+  if (err && typeof err === "object" && "message" in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return String(err);
+};
 
 export default function AddMedicinePage() {
   const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCats, setIsLoadingCats] = useState(true);
+
+  useEffect(() => {
+    async function loadCategories() {
+      const res = await getCategoriesAction();
+      if (res.success) {
+        setCategories(res.data);
+      } else {
+        toast.error("Failed to load categories");
+      }
+      setIsLoadingCats(false);
+    }
+    loadCategories();
+  }, []);
 
   const form = useForm({
     defaultValues: {
       name: "",
       description: "",
-      price: 0,
-      stock: 0,
+      price: "" as unknown as number,
+      stock: "" as unknown as number,
       manufacturer: "",
-      categoryId: 1,
+      categoryId: "" as unknown as number,
+      image: null as File | null,
     },
     validators: {
       onChange: medicineSchema,
     },
     onSubmit: async ({ value }) => {
       const toastId = toast.loading("Adding medicine to database...");
+      
+      const formData = new FormData();
+      formData.append("name", value.name);
+      formData.append("description", value.description);
+      formData.append("price", String(value.price));
+      formData.append("stock", String(value.stock));
+      formData.append("manufacturer", value.manufacturer);
+      formData.append("categoryId", String(value.categoryId));
+      if (value.image) {
+        try {
+          const options = {
+            maxSizeMB: 0.8,
+            maxWidthOrHeight: 1024,
+            useWebWorker: true,
+          };
+          toast.loading("Compressing product image...", { id: toastId });
+          const compressedFile = await imageCompression(value.image, options);
+          formData.append("image", compressedFile, value.image.name);
+        } catch (error) {
+          toast.error("Failed to compress image.", { id: toastId });
+          return;
+        }
+      }
 
-      const result = await createMedicineAction(value);
+      const result = await createMedicineAction(formData);
 
       if (result.error) {
         toast.error(result.error, { id: toastId });
       } else {
         toast.success("Medicine added successfully!", { id: toastId });
         form.reset();
-        router.push("/shop");
+        router.push("/seller/inventory");
       }
     },
   });
@@ -64,11 +117,19 @@ export default function AddMedicinePage() {
               e.preventDefault();
               e.stopPropagation();
               form.handleSubmit();
+              
+              const val = form.state.values;
+              const hasEmptyFields = !val.name || !val.description || !val.price || !val.stock || !val.manufacturer || !val.categoryId || !val.image;
+              
+              if (!form.state.isValid || hasEmptyFields) {
+                toast.error("Please fill out all required fields with valid details.", {
+                  position: "bottom-center",
+                });
+              }
             }}
           >
             <FieldGroup>
               
-              {/* Name Field */}
               <form.Field name="name">
                 {(field) => {
                   const isInvalid = field.state.meta.isTouched && field.state.meta.errors.length > 0;
@@ -80,13 +141,18 @@ export default function AddMedicinePage() {
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                       />
-                      {isInvalid && <FieldError errors={field.state.meta.errors.map(err => ({ message: typeof err === 'string' ? err : (err as { message?: string })?.message }))} />}
+                      {isInvalid && (
+                        <FieldError
+                          errors={field.state.meta.errors.map((err) => ({
+                            message: getErrorMessage(err),
+                          }))}
+                        />
+                      )}
                     </Field>
                   );
                 }}
               </form.Field>
 
-              {/* Description Field */}
               <form.Field name="description">
                 {(field) => {
                   const isInvalid = field.state.meta.isTouched && field.state.meta.errors.length > 0;
@@ -94,19 +160,24 @@ export default function AddMedicinePage() {
                     <Field data-invalid={isInvalid}>
                       <FieldLabel>Description</FieldLabel>
                       <Textarea
-                        placeholder="Describe the uses and side effects..."
+                        placeholder="Describe uses and side effects..."
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                         className="resize-none"
                         rows={3}
                       />
-                      {isInvalid && <FieldError errors={field.state.meta.errors.map(err => ({ message: typeof err === 'string' ? err : (err as { message?: string })?.message }))} />}
+                      {isInvalid && (
+                        <FieldError
+                          errors={field.state.meta.errors.map((err) => ({
+                            message: getErrorMessage(err),
+                          }))}
+                        />
+                      )}
                     </Field>
                   );
                 }}
               </form.Field>
 
-              {/* Grid for Price and Stock */}
               <div className="grid grid-cols-2 gap-4">
                 <form.Field name="price">
                   {(field) => {
@@ -116,11 +187,21 @@ export default function AddMedicinePage() {
                         <FieldLabel>Price (৳)</FieldLabel>
                         <Input
                           type="number"
-                          placeholder="0"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(Number(e.target.value))}
+                          placeholder="Enter Price"
+                          value={field.state.value || ""}
+                          onChange={(e) =>
+                            field.handleChange(
+                              e.target.value === "" ? ("" as unknown as number) : Number(e.target.value)
+                            )
+                          }
                         />
-                        {isInvalid && <FieldError errors={field.state.meta.errors.map(err => ({ message: typeof err === 'string' ? err : (err as { message?: string })?.message }))} />}
+                        {isInvalid && (
+                          <FieldError
+                            errors={field.state.meta.errors.map((err) => ({
+                              message: getErrorMessage(err),
+                            }))}
+                          />
+                        )}
                       </Field>
                     );
                   }}
@@ -134,48 +215,121 @@ export default function AddMedicinePage() {
                         <FieldLabel>Initial Stock</FieldLabel>
                         <Input
                           type="number"
-                          placeholder="0"
-                          value={field.state.value}
-                          onChange={(e) => field.handleChange(Number(e.target.value))}
+                          placeholder="Enter Stock"
+                          value={field.state.value || ""}
+                          onChange={(e) =>
+                            field.handleChange(
+                              e.target.value === "" ? ("" as unknown as number) : Number(e.target.value)
+                            )
+                          }
                         />
-                        {isInvalid && <FieldError errors={field.state.meta.errors.map(err => ({ message: typeof err === 'string' ? err : (err as { message?: string })?.message }))} />}
+                        {isInvalid && (
+                          <FieldError
+                            errors={field.state.meta.errors.map((err) => ({
+                              message: getErrorMessage(err),
+                            }))}
+                          />
+                        )}
                       </Field>
                     );
                   }}
                 </form.Field>
               </div>
 
-              {/* Manufacturer Field */}
-              <form.Field name="manufacturer">
+              <div className="grid grid-cols-2 gap-4">
+                <form.Field name="manufacturer">
+                  {(field) => {
+                    const isInvalid = field.state.meta.isTouched && field.state.meta.errors.length > 0;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel>Manufacturer</FieldLabel>
+                        <Input
+                          placeholder="e.g., Square Pharmaceuticals"
+                          value={field.state.value}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                        />
+                        {isInvalid && (
+                          <FieldError
+                            errors={field.state.meta.errors.map((err) => ({
+                              message: getErrorMessage(err),
+                            }))}
+                          />
+                        )}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+
+                <form.Field name="categoryId">
+                  {(field) => {
+                    const isInvalid = field.state.meta.isTouched && field.state.meta.errors.length > 0;
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel>Category</FieldLabel>
+                        <Select
+                          disabled={isLoadingCats}
+                          value={field.state.value ? String(field.state.value) : undefined}
+                          onValueChange={(val) => field.handleChange(Number(val))}
+                        >
+                          <SelectTrigger className="w-full h-9">
+                            <SelectValue placeholder="Select a category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.id} value={String(cat.id)}>
+                                {cat.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {isInvalid && (
+                          <FieldError
+                            errors={field.state.meta.errors.map((err) => ({
+                              message: getErrorMessage(err),
+                            }))}
+                          />
+                        )}
+                      </Field>
+                    );
+                  }}
+                </form.Field>
+              </div>
+
+              <form.Field name="image">
                 {(field) => {
                   const isInvalid = field.state.meta.isTouched && field.state.meta.errors.length > 0;
                   return (
                     <Field data-invalid={isInvalid}>
-                      <FieldLabel>Manufacturer</FieldLabel>
+                      <FieldLabel>Product Image (Optional)</FieldLabel>
                       <Input
-                        placeholder="e.g., Square Pharmaceuticals"
-                        value={field.state.value}
-                        onChange={(e) => field.handleChange(e.target.value)}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => field.handleChange(e.target.files?.[0] || null)}
                       />
-                      {isInvalid && <FieldError errors={field.state.meta.errors.map(err => ({ message: typeof err === 'string' ? err : (err as { message?: string })?.message }))} />}
+                      {isInvalid && (
+                        <FieldError
+                          errors={field.state.meta.errors.map((err) => ({
+                            message: getErrorMessage(err),
+                          }))}
+                        />
+                      )}
                     </Field>
                   );
                 }}
               </form.Field>
-
             </FieldGroup>
           </form>
         </CardContent>
         <CardFooter>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
+          <form.Subscribe selector={(state) => [state.isSubmitting]}>
+            {([isSubmitting]) => (
               <Button
                 form="add-medicine-form"
                 type="submit"
                 className="w-full"
-                disabled={!canSubmit || isSubmitting}
+                disabled={isSubmitting}
               >
-                {isSubmitting ? "Adding to Database..." : "Add Medicine"}
+                {isSubmitting ? "Uploading Image & Adding..." : "Add Medicine"}
               </Button>
             )}
           </form.Subscribe>
