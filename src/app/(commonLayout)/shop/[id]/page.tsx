@@ -1,26 +1,13 @@
 import { Medicine, Review } from "@/types";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Pill, ShoppingCart, User, Star } from "lucide-react";
+import { Pill, User, Star } from "lucide-react";
 import { notFound } from "next/navigation";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-
-async function getMedicine(id: string): Promise<Medicine | null> {
-  try {
-    const res = await fetch(`${API_URL}/api/medicines/${id}`, { 
-      cache: "no-store" 
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.data; 
-  } catch {
-    return null;
-  }
-}
+import { getMedicineByIdAction } from "../../../../../actions/medicine";
+import { AddToCartButton } from "@/components/modules/shop/AddToCartButton";
+import Image from "next/image";
 
 export default async function MedicineDetailsPage({
   params,
@@ -28,7 +15,8 @@ export default async function MedicineDetailsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const medicine = await getMedicine(id);
+  const result = await getMedicineByIdAction(id);
+  const medicine = result.data as Medicine | null;
 
   if (!medicine) {
     notFound();
@@ -36,14 +24,15 @@ export default async function MedicineDetailsPage({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-10">
-      {/* Product Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-        {/* Image Placeholder */}
-        <div className="aspect-square bg-muted rounded-xl flex items-center justify-center border">
-          <Pill className="h-32 w-32 text-muted-foreground/40" />
+        <div className="relative aspect-square bg-muted rounded-xl flex items-center justify-center border overflow-hidden">
+          {medicine.imageUrl ? (
+            <Image src={medicine.imageUrl} alt={medicine.name} fill className="object-cover" />
+          ) : (
+            <Pill className="h-32 w-32 text-muted-foreground/40" />
+          )}
         </div>
 
-        {/* Info */}
         <div className="space-y-6">
           <div className="space-y-2">
             <Badge variant="outline" className="text-primary border-primary">
@@ -64,16 +53,12 @@ export default async function MedicineDetailsPage({
             </Badge>
           </div>
 
-          <Button size="lg" className="w-full md:w-auto gap-2" disabled={medicine.stock === 0}>
-            <ShoppingCart className="h-5 w-5" />
-            Add to Cart
-          </Button>
+          <AddToCartButton medicine={medicine} variant="lg" />
         </div>
       </div>
 
       <Separator />
 
-      {/* Reviews Section */}
       <section className="space-y-6">
         <h2 className="text-2xl font-bold">Customer Reviews</h2>
         {medicine.reviews && medicine.reviews.length > 0 ? (
@@ -85,8 +70,17 @@ export default async function MedicineDetailsPage({
                     <AvatarFallback><User className="h-5 w-5" /></AvatarFallback>
                   </Avatar>
                   <div className="flex-1 space-y-1">
-                    <div className="flex justify-between items-center">
-                      <p className="font-semibold">{review.customer?.name || "Anonymous"}</p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold">{review.customer?.name || "Anonymous"}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {new Date(review.createdAt).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
                       <div className="flex text-yellow-500 items-center gap-1">
                         <Star className="h-4 w-4 fill-current" />
                         <span className="text-sm font-medium">{review.rating}/5</span>

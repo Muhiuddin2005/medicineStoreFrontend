@@ -3,13 +3,24 @@ import { Medicine } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { getCategoriesAction } from "../../../../actions/category";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
-async function getMedicines(search?: string, category?: string): Promise<Medicine[]> {
+
+async function getMedicines(
+  search?: string, 
+  category?: string,
+  manufacturer?: string,
+  minPrice?: string,
+  maxPrice?: string
+): Promise<Medicine[]> {
   try {
     const url = new URL(`${API_URL}/api/medicines`);
     if (search) url.searchParams.append("search", search);
     if (category) url.searchParams.append("category", category);
+    if (manufacturer) url.searchParams.append("manufacturer", manufacturer);
+    if (minPrice) url.searchParams.append("minPrice", minPrice);
+    if (maxPrice) url.searchParams.append("maxPrice", maxPrice);
 
     const res = await fetch(url.toString(), { cache: "no-store" });
     
@@ -31,7 +42,16 @@ export default async function ShopPage({
   const params = await searchParams;
   const searchQuery = typeof params.search === "string" ? params.search : undefined;
   const categoryQuery = typeof params.category === "string" ? params.category : undefined;
-  const medicines = await getMedicines(searchQuery, categoryQuery);
+  const manufacturerQuery = typeof params.manufacturer === "string" ? params.manufacturer : undefined;
+  const minPriceQuery = typeof params.minPrice === "string" ? params.minPrice : undefined;
+  const maxPriceQuery = typeof params.maxPrice === "string" ? params.maxPrice : undefined;
+  
+  const [medicines, categoriesResult] = await Promise.all([
+    getMedicines(searchQuery, categoryQuery, manufacturerQuery, minPriceQuery, maxPriceQuery),
+    getCategoriesAction()
+  ]);
+  
+  const categories = categoriesResult.data || [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
@@ -44,18 +64,15 @@ export default async function ShopPage({
             
             <div className="space-y-2">
               <Label htmlFor="search">Search</Label>
-              <div className="flex gap-2">
-                <Input 
-                  type="text" 
-                  id="search" 
-                  name="search" 
-                  placeholder="Search medicines..." 
-                  defaultValue={searchQuery}
-                />
-              </div>
+              <Input 
+                type="text" 
+                id="search" 
+                name="search" 
+                placeholder="Medicine name..." 
+                defaultValue={searchQuery}
+              />
             </div>
 
-            {/* Category Filter */}
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <select 
@@ -65,11 +82,44 @@ export default async function ShopPage({
                 className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
               >
                 <option value="">All Categories</option>
-                <option value="Pain Killer">Painkillers</option>
-                <option value="Antibiotics">Antibiotics</option>
-                <option value="Vitamins">Vitamins</option>
-                <option value="First Aid">First Aid</option>
+                {categories.map((cat: { id: number; name: string }) => (
+                  <option key={cat.id} value={cat.name}>
+                    {cat.name}
+                  </option>
+                ))}
               </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="manufacturer">Manufacturer</Label>
+              <Input 
+                type="text" 
+                id="manufacturer" 
+                name="manufacturer" 
+                placeholder="e.g. Square" 
+                defaultValue={manufacturerQuery}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Price Range (৳)</Label>
+              <div className="flex gap-2 items-center">
+                <Input 
+                  type="number" 
+                  name="minPrice" 
+                  placeholder="Min" 
+                  defaultValue={minPriceQuery}
+                  className="w-full"
+                />
+                <span className="text-muted-foreground">-</span>
+                <Input 
+                  type="number" 
+                  name="maxPrice" 
+                  placeholder="Max" 
+                  defaultValue={maxPriceQuery}
+                  className="w-full"
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -82,7 +132,6 @@ export default async function ShopPage({
         </div>
       </aside>
 
-      {/* Main Product Grid */}
       <main className="flex-1">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">All Medicines</h1>
