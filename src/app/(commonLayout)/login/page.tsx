@@ -5,12 +5,13 @@ import * as z from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { loginAction } from "../../../../actions/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 
 const loginSchema = z.object({
@@ -23,6 +24,8 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/";
   const reason = searchParams.get("reason");
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     if (reason === "confirm-order") {
@@ -36,11 +39,13 @@ export default function LoginPage() {
       password: "",
     },
     onSubmit: async ({ value }) => {
+      setSubmitError("");
       const toastId = toast.loading("Logging in...");
       const result = await loginAction(value);
       
       if (result.error) {
-        toast.error(result.error, { id: toastId });
+        setSubmitError(result.error);
+        toast.dismiss(toastId);
         return;
       }
 
@@ -117,14 +122,24 @@ export default function LoginPage() {
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                        <Input
-                          type="password"
-                          id={field.name}
-                          name={field.name}
-                          placeholder="••••••••"
-                          value={field.state.value}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value)}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            id={field.name}
+                            name={field.name}
+                            placeholder="••••••••"
+                            value={field.state.value}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value)}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
                         {isInvalid && (
                           <FieldError
                             errors={field.state.meta.errors.map((err) => ({
@@ -137,6 +152,12 @@ export default function LoginPage() {
                   }}
                 </form.Field>
 
+                {submitError && (
+                  <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl font-medium flex items-center gap-2 mt-2">
+                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    {submitError}
+                  </div>
+                )}
               </FieldGroup>
             </form>
             

@@ -37,26 +37,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [cart]);
 
   const addToCart = (medicine: Medicine) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.medicine.id === medicine.id);
-      const currentQuantity = existing ? existing.quantity : 0;
-      if (currentQuantity + 1 > medicine.stock) {
-        toast.error(`Only ${medicine.stock} units available in stock.`);
-        return prev;
-      }
+    const existing = cart.find((item) => item.medicine.id === medicine.id);
+    const currentQuantity = existing ? existing.quantity : 0;
+    if (currentQuantity + 1 > medicine.stock) {
+      toast.error(`Only ${medicine.stock} units available in stock.`);
+      return;
+    }
 
-      if (existing) {
-        toast.info(`Increased quantity for ${medicine.name}`);
-        return prev.map((item) =>
+    if (existing) {
+      toast.info(`Increased quantity for ${medicine.name}`);
+      setCart((prev) =>
+        prev.map((item) =>
           item.medicine.id === medicine.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
-        );
-      }
-      
+        )
+      );
+    } else {
       toast.success(`${medicine.name} added to cart`);
-      return [...prev, { medicine, quantity: 1 }];
-    });
+      setCart((prev) => [...prev, { medicine, quantity: 1 }]);
+    }
   };
 
   const removeFromCart = (id: number) => {
@@ -65,33 +65,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateQuantity = (id: number, delta: number) => {
+    const item = cart.find((i) => i.medicine.id === id);
+    if (!item) return;
+    const newQty = item.quantity + delta;
+    if (newQty > item.medicine.stock) {
+      toast.error(`Only ${item.medicine.stock} units available in stock.`);
+      return;
+    }
     setCart((prev) =>
-      prev.map((item) => {
-        if (item.medicine.id === id) {
-          const newQty = item.quantity + delta;
-          if (newQty > item.medicine.stock) {
-            toast.error(`Only ${item.medicine.stock} units available in stock.`);
-            return item;
-          }
-          return { ...item, quantity: Math.max(1, newQty) };
-        }
-        return item;
-      })
+      prev.map((item) =>
+        item.medicine.id === id
+          ? { ...item, quantity: Math.max(1, newQty) }
+          : item
+      )
     );
   };
 
   const setQuantity = (id: number, quantity: number) => {
+    const item = cart.find((i) => i.medicine.id === id);
+    if (!item) return;
+    if (quantity > item.medicine.stock) {
+      toast.error(`Only ${item.medicine.stock} units available in stock.`);
+      setCart((prev) =>
+        prev.map((item) =>
+          item.medicine.id === id
+            ? { ...item, quantity: item.medicine.stock }
+            : item
+        )
+      );
+      return;
+    }
     setCart((prev) =>
-      prev.map((item) => {
-        if (item.medicine.id === id) {
-          if (quantity > item.medicine.stock) {
-            toast.error(`Only ${item.medicine.stock} units available in stock.`);
-            return { ...item, quantity: item.medicine.stock };
-          }
-          return { ...item, quantity: Math.max(1, quantity) };
-        }
-        return item;
-      })
+      prev.map((item) =>
+        item.medicine.id === id
+          ? { ...item, quantity: Math.max(1, quantity) }
+          : item
+      )
     );
   };
 

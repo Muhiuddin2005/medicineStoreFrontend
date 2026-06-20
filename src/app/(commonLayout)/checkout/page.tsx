@@ -75,7 +75,7 @@ export default function CheckoutPage() {
         sessionStorage.removeItem("pending_shipping_address");
         toast.success("Order placed successfully!", { id: toastId });
         clearCart();
-        router.push("/");
+        router.push("/dashboard");
       }
     },
   });

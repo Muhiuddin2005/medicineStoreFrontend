@@ -7,14 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Pill, ShieldCheck, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getSessionAction } from "../../../actions/auth";
+import MedicineSynthesizerBackground from "./MedicineSynthesizerBackground";
 
-export default function HeroSection() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+export default function HeroSection({ initialIsLoggedIn = false }: { initialIsLoggedIn?: boolean }) {
+  const [isLoggedIn, setIsLoggedIn] = useState(initialIsLoggedIn);
   const titleWords = "Delivered.".split("");
 
   useEffect(() => {
-    getSessionAction().then((session: any) => setIsLoggedIn(!!session));
-  }, []);
+    setIsLoggedIn(initialIsLoggedIn);
+  }, [initialIsLoggedIn]);
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -58,29 +59,8 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative bg-linear-to-b from-primary/10 via-primary/5 to-background py-28 px-4 overflow-hidden min-h-[85vh] flex items-center perspective-1000">
-      
-      <div className="absolute inset-0 -z-10">
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.1, 1],
-            x: [0, 30, 0],
-            y: [0, -20, 0] 
-          }}
-          transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-12 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            x: [0, -40, 0],
-            y: [0, 40, 0] 
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-          className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none"
-        />
-        <div className="absolute inset-0 bg-grid-black/[0.01] dark:bg-grid-white/[0.01]" />
-      </div>
+    <section className="relative py-28 px-4 overflow-hidden min-h-[85vh] flex items-center perspective-1000">
+      <MedicineSynthesizerBackground />
 
       <motion.div 
         variants={containerVariants}

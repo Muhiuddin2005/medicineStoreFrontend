@@ -22,9 +22,24 @@ export default async function AdminUsersPage() {
 
   const getRoleBadge = (role: Role) => {
     switch (role) {
-      case ROLES.ADMIN: return <Badge variant="destructive">Admin</Badge>;
-      case ROLES.SELLER: return <Badge className="bg-purple-500/10 text-purple-600 hover:bg-purple-500/20" variant="outline">Seller</Badge>;
-      default: return <Badge variant="secondary">Customer</Badge>;
+      case ROLES.ADMIN: 
+        return (
+          <Badge className="bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/15 rounded-full px-3 py-0.5 font-bold">
+            Admin
+          </Badge>
+        );
+      case ROLES.SELLER: 
+        return (
+          <Badge className="bg-purple-500/10 text-purple-400 border border-purple-500/20 hover:bg-purple-500/15 rounded-full px-3 py-0.5 font-bold">
+            Seller
+          </Badge>
+        );
+      default: 
+        return (
+          <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/15 rounded-full px-3 py-0.5 font-bold">
+            Customer
+          </Badge>
+        );
     }
   };
 

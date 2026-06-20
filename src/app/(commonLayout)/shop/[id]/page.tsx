@@ -25,7 +25,10 @@ export default async function MedicineDetailsPage({
   return (
     <div className="max-w-5xl mx-auto px-4 py-10 space-y-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-        <div className="relative aspect-square bg-muted rounded-xl flex items-center justify-center border overflow-hidden">
+        <div 
+          className="relative aspect-square bg-muted rounded-xl flex items-center justify-center border overflow-hidden"
+          style={{ position: "relative" }}
+        >
           {medicine.imageUrl ? (
             <Image src={medicine.imageUrl} alt={medicine.name} fill className="object-cover" />
           ) : (

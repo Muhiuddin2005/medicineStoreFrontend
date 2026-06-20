@@ -21,7 +21,10 @@ export function MedicineCard({ medicine }: { medicine: Medicine }) {
       
       <div className="relative flex flex-col h-full w-full bg-card rounded-[24px] overflow-hidden shadow-sm z-10 transition-colors group-hover:bg-card/95 backdrop-blur-xl">
         
-        <div className="relative h-48 w-full bg-muted/30 flex items-center justify-center overflow-hidden border-b border-border/50">
+        <div 
+          className="relative h-48 w-full bg-muted/30 flex items-center justify-center overflow-hidden border-b border-border/50"
+          style={{ position: "relative" }}
+        >
           {medicine.imageUrl ? (
             <Image 
               src={medicine.imageUrl} 

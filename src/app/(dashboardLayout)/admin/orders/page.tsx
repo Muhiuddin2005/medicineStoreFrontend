@@ -24,7 +24,9 @@ interface Order {
 
 export default async function AdminOrdersPage() {
   const result = await getAdminDataAction("orders");
-  const orders = (result.data || []) as Order[];
+  const orders = ((result.data || []) as Order[]).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">

@@ -12,14 +12,18 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ROLES } from "@/types";
 
-export function Navbar() {
+interface NavbarProps {
+  initialUser: { id: number; email: string; role: (typeof ROLES)[keyof typeof ROLES] } | null;
+}
+
+export function Navbar({ initialUser }: NavbarProps) {
   const { totalItems } = useCart();
-  const [user, setUser] = useState<{ id: number; email: string; role: (typeof ROLES)[keyof typeof ROLES] } | null>(null);
+  const [user, setUser] = useState<{ id: number; email: string; role: (typeof ROLES)[keyof typeof ROLES] } | null>(initialUser);
   const router = useRouter();
 
   useEffect(() => {
-    getSessionAction().then(setUser);
-  }, []);
+    setUser(initialUser);
+  }, [initialUser]);
 
   const handleLogout = async () => {
     await logoutAction();

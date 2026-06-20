@@ -5,8 +5,9 @@ import * as z from "zod";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
-import { User, Store } from "lucide-react";
+import { User, Store, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,12 @@ import { ROLES } from "@/types";
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z
+    .string()
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+      "Password must be at least 8 characters, containing uppercase, lowercase, number, and special character (@$!%*?&)"
+    ),
   role: z.enum([ROLES.CUSTOMER, ROLES.SELLER]),
 });
 
@@ -27,6 +33,8 @@ export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isSellerRegistration = searchParams.get("role")?.toLowerCase() === "seller";
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const form = useForm({
     defaultValues: {
       name: "",
@@ -35,11 +43,13 @@ export default function RegisterPage() {
       role: isSellerRegistration ? ROLES.SELLER : ROLES.CUSTOMER,
     },
     onSubmit: async ({ value }) => {
+      setSubmitError("");
       const toastId = toast.loading("Creating account...");
       const result = await registerAction(value);
       
       if (result.error) {
-        toast.error(result.error, { id: toastId });
+        setSubmitError(result.error);
+        toast.dismiss(toastId);
         return;
       }
 
@@ -151,14 +161,24 @@ export default function RegisterPage() {
                     return (
                       <Field data-invalid={isInvalid}>
                         <FieldLabel htmlFor={field.name}>Password</FieldLabel>
-                        <Input
-                          type="password"
-                          id={field.name}
-                          name={field.name}
-                          placeholder="••••••••"
-                          value={field.state.value}
-                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value)}
-                        />
+                        <div className="relative">
+                          <Input
+                            type={showPassword ? "text" : "password"}
+                            id={field.name}
+                            name={field.name}
+                            placeholder="••••••••"
+                            value={field.state.value}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => field.handleChange(e.target.value)}
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground/60 hover:text-foreground transition-colors cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
                         {isInvalid && (
                           <FieldError
                             errors={field.state.meta.errors.map((err) => ({
@@ -242,6 +262,12 @@ export default function RegisterPage() {
                   }}
                 </form.Field>
 
+                {submitError && (
+                  <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-500 rounded-xl font-medium flex items-center gap-2 mt-2">
+                    <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                    {submitError}
+                  </div>
+                )}
               </FieldGroup>
             </form>
             

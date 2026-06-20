@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Configure Turbopack root directory so that it resolves dependencies (like tailwindcss) correctly.
+  // @ts-ignore
+  turbopack: {
+    root: process.cwd(),
+  },
 };
 
 export default nextConfig;
+

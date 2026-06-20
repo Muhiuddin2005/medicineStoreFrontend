@@ -56,44 +56,38 @@ export function UserStatusToggle({ userId, currentStatus, userRole }: { userId: 
     setIsUpdating(false);
   };
 
+  if (userRole === ROLES.ADMIN) {
+    return (
+      <Badge className="bg-green-500/10 text-green-400 border border-green-500/20 rounded-full px-3 py-0.5">
+        Active
+      </Badge>
+    );
+  }
+
   return (
-    <div className="w-fit ml-auto">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild disabled={isUpdating || userRole === ROLES.ADMIN}>
-          <Badge 
-            variant="outline" 
-            className={`cursor-pointer transition-colors flex items-center gap-1 select-none pr-1.5 ${
-              currentStatus 
-                ? "bg-green-500/10 text-green-600 hover:bg-green-500/20" 
-                : "bg-red-500/10 text-red-600 hover:bg-red-500/20"
-            } ${isUpdating ? "opacity-50 pointer-events-none" : ""} ${
-              userRole === ROLES.ADMIN ? "cursor-default hover:bg-transparent" : ""
-            }`}
-          >
-            {currentStatus ? "Active" : "Blocked"}
-            {userRole !== ROLES.ADMIN && <ChevronDown className="h-3 w-3 opacity-60" />}
-          </Badge>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          {currentStatus ? (
-            <DropdownMenuItem 
-              onClick={() => handleToggle(false)} 
-              className="text-red-600 focus:text-red-600 focus:bg-red-500/10 cursor-pointer"
-            >
-              <ShieldAlert className="mr-2 h-4 w-4" />
-              Block User
-            </DropdownMenuItem>
-          ) : (
-            <DropdownMenuItem 
-              onClick={() => handleToggle(true)} 
-              className="text-green-600 focus:text-green-600 focus:bg-green-500/10 cursor-pointer"
-            >
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Activate User
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex items-center gap-2 justify-end">
+      <button
+        disabled={isUpdating || currentStatus}
+        onClick={() => handleToggle(true)}
+        className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all duration-200 ${
+          currentStatus
+            ? "bg-green-500/15 text-green-400 border-green-500/30 cursor-default"
+            : "bg-transparent text-muted-foreground border-border hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/20 cursor-pointer"
+        } ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
+      >
+        Active
+      </button>
+      <button
+        disabled={isUpdating || !currentStatus}
+        onClick={() => handleToggle(false)}
+        className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all duration-200 ${
+          !currentStatus
+            ? "bg-red-500/15 text-red-400 border-red-500/30 cursor-default"
+            : "bg-transparent text-muted-foreground border-border hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 cursor-pointer"
+        } ${isUpdating ? "opacity-50 pointer-events-none" : ""}`}
+      >
+        Block
+      </button>
     </div>
   );
 }

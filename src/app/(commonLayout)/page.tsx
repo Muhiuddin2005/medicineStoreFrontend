@@ -7,6 +7,7 @@ import { WhyChooseUs } from "@/components/modules/home/WhyChooseUs";
 import HowItWorks from "@/components/layout/HowItWorks";
 import HeroSection from "@/components/layout/HeroSection";
 import { RevealFade, RevealZoom } from "@/components/animations/ScrollReveal";
+import { getSessionAction } from "../../../actions/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
@@ -23,11 +24,13 @@ async function getFeaturedMedicines(): Promise<Medicine[]> {
 
 export default async function HomePage() {
   const featuredMedicines = await getFeaturedMedicines();
+  const session = await getSessionAction();
+  const isLoggedIn = !!session;
 
   return (
     <div className="flex flex-col min-h-screen overflow-x-hidden">
       
-      <HeroSection />
+      <HeroSection initialIsLoggedIn={isLoggedIn} />
 
       <HowItWorks />
 

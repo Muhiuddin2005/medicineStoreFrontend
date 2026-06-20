@@ -16,7 +16,9 @@ type Order = {
 
 export default async function SellerOrdersPage() {
   const result = await getSellerOrdersAction();
-  const orders = result.data || [];
+  const orders = ((result.data || []) as Order[]).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-10">

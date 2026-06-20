@@ -38,6 +38,23 @@ export function OrderTrackSheet({ order }: OrderTrackSheetProps) {
     updatedAt: order.updatedAt,
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case "PLACED":
+        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/30";
+      case "PROCESSING":
+        return "bg-orange-500/10 text-orange-400 border-orange-500/30";
+      case "SHIPPED":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/30";
+      case "DELIVERED":
+        return "bg-green-500/10 text-green-400 border-green-500/30";
+      case "CANCELLED":
+        return "bg-red-500/10 text-red-400 border-red-500/30";
+      default:
+        return "bg-gray-500/10 text-gray-400 border-gray-500/30";
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -48,10 +65,10 @@ export function OrderTrackSheet({ order }: OrderTrackSheetProps) {
       <SheetContent side="right" className="w-[400px] sm:w-[500px] bg-background/95 backdrop-blur-xl border-l border-border/40 overflow-y-auto">
         <SheetHeader className="mb-6 border-b pb-6">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-2xl font-black tracking-tight bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+            <SheetTitle className="text-2xl font-black tracking-tight text-foreground">
               Order #{order.id}
             </SheetTitle>
-            <Badge variant="outline" className="capitalize font-bold text-sm bg-primary/5 text-primary border-primary/20 px-3 py-1">
+            <Badge variant="outline" className={`capitalize font-bold text-sm px-3 py-1 ${getStatusColor(order.status)}`}>
               {order.status.toLowerCase()}
             </Badge>
           </div>
