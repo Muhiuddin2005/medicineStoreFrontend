@@ -1,6 +1,8 @@
 # MediStore 💊 — Frontend
 
 > **"Your Trusted Online Medicine Shop"**
+> 
+> 🌐 **Live Link:** [https://medistore-frontend-plum.vercel.app/](https://medistore-frontend-plum.vercel.app/)
 
 MediStore Frontend is a modern, responsive, and performance-optimized e-commerce web application built using **Next.js 16 (App Router)** and **TypeScript**. It serves as the user-facing interface for customers, sellers, and administrators of the MediStore platform, facilitating seamless medicine browsing, order placements, inventory tracking, and platform moderation.
 
